@@ -1,0 +1,143 @@
+install.packages("igraph")
+library('igraph')
+library('tidyverse')
+getwd() 
+el_dalson <- read.csv2(file='s06_ego_dalson_el.csv', encoding = "latin1")
+
+g_ego_dalson <- graph_from_data_frame(el_dalson, directed = F)
+
+plot(g_ego_dalson)
+
+#importar_a_node_list
+
+nl_dalson <- read.csv2(file='s06_ego_dalson_nl.csv', encoding = "latin1")
+
+# criando um grafo com el + nl
+
+g_ego_dalson <- graph_from_data_frame(el_dalson, directed = F, vertices = nl_dalson)
+
+el_bip <- read_csv2(file = 's06_bipartite_el.csv') #documento -> assunto
+nl_bip <- read_csv2(file = "s06_bipartite_nl.csv") #todos os nós
+
+#criar a rede
+g_bip <- graph_from_data_frame(el_bip, directed= F, vertices = nl_bip)
+
+is.bipartite(g_bip)
+
+plot(g_bip)
+
+#por matrizes
+
+mat_ne_bin <- read.csv2(file = "mat_ne_bin.csv", row.names = 1)
+
+View(mat_ne_bin)
+
+mat_ne_bin <- as.matrix(mat_ne_bin)
+
+rownames(mat_ne_bin)
+colnames(mat_ne_bin)
+
+#rede a partir de uma matriz
+
+g_ne <- graph_from_adjacency_matrix(mat_ne_bin, mode = "directed", weighted = NULL, diag = F)
+
+plot(g_ne)
+
+#criar a partir de uma matriz para redes bipartidarias
+
+mat_aluno_tema <- read.csv2("matriz_aluno_tema.csv", row.names = 1)
+
+mat_aluno_tema <- as.matrix(mat_aluno_tema)
+
+g_aluno_tema <- graph_from_incidence_matrix(mat_aluno_tema, directed = F, weighted = NULL)
+
+plot(g_aluno_tema)
+
+gorder(g_ego_dalson) #ordem - vertices
+gsize(g_aluno_tema) #tamanho - arestas
+
+# redes simples e não simples
+
+plot(g_ego_dalson) #rede não simples pois tem multiplas arestas entre os vértices
+
+el_dalson_simples <- read.csv2('s06_ego_dalson_el_sm.csv', encoding = "latin1")
+
+g_ego_dalson_simples <- graph_from_data_frame(el_dalson_simples, directed = F, vertices = nl_dalson)
+
+plot(g_ego_dalson_simples)
+
+is.simple(g_ego_dalson)
+is.simple(g_ego_dalson_simples)
+
+#agregando arestas dentro do igraph
+
+g_ego_dalson_w <- g_ego_dalson
+
+E(g_ego_dalson_w)$weight <- 1
+
+g_ego_dalson_w
+
+g_ego_dalson_w <- igraph::simplify(g_ego_dalson_w, remove.multiple = T, edge.attr.comb = "sum")
+
+plot(g_ego_dalson_w)
+sort(E(g_ego_dalson_w))$weight
+
+#acessando vertices e arestas
+
+g_ne
+V(g_ne)
+E(g_ne)
+
+dalson_simplesinho<-table(V(g_ego_dalson_simples)$universidade)
+
+view(dalson_simplesinho)
+
+g_aluno_tema
+
+alunos_m <- c("enio", "diego", "rennan", "erikson")
+
+V(g_aluno_tema)$name[V(g_aluno_tema)$name %in% alunos_m]
+
+E(g_ego_dalson_w)$weight[3:5]
+
+hist(E(g_ego_dalson_w)$weight)
+
+V(g_ne)$name
+V(g_ne)$pop <- c(600, 2600, 817,1000, 890, 1600, 2900, 1100, 868) #criando um noivo atributo de vertice | população
+g_ne
+
+V(g_ne)$met <- ifelse(V(g_ne)$pop>=1000, T, F) #criando um novo atributo de vertice metropole usando uma regra ifelse em cima de população no mesmo grafo
+
+g_ne
+
+table(V(g_ne)$met)
+
+plot(g_ne)
+
+# recuperar nomes dos veetices que sao metropoles
+
+V(g_ne)$name[V(g_ne)$met==T]
+
+plot(g_ne, vertex.size=V(g_ne)$pop/100, vertex.color=V(g_ne)$met) #tamanho e cor para identificar a população e se é metrópole
+
+#exportando um objeto igraph
+  
+nl_ne <- get.data.frame(g_ne, what = "vertices")
+
+write.csv2(nl_ne, "nl_ne.csv")
+
+# vizinhança e adjacência
+
+neighbors(g_ne, "Salvador")
+
+neighbors(g_ne, "Recife", mode = "out")
+
+neighbors(g_aluno_tema, "saude")
+
+neighborhood(g_ne, "Salvador", order=2) #até quantos passos de distância(order)
+
+# subset
+
+g_ne_ind <- induced.subgraph(g_ne, vids = V(g_ne)$met==T)
+
+plot(g_ne_ind)
