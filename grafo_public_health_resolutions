@@ -1,0 +1,86 @@
+# Carregar o pacote igraph 
+library(tidyverse)
+install.packages("igraph")
+library(igraph)
+View(p_health)
+# Ler os dados
+p_health <- read.csv2(file = 'sr_v2.csv', encoding = "latin1")
+
+# Criar o grafo
+g_p_health <- graph_from_data_frame(p_health, directed = FALSE)
+
+# Identificar nós com padrões específicos nos nomes
+nodes_with_wha <- V(g_p_health)[grep("WHA", V(g_p_health)$name)]
+nodes_with_unsc <- V(g_p_health)[grep("UNSC", V(g_p_health)$name)]
+nodes_with_hrc <- V(g_p_health)[grep("HRC", V(g_p_health)$name)]
+nodes_with_e <- V(g_p_health)[grep("E", V(g_p_health)$name)]
+
+# Definir cores para os nós com base nos padrões
+node_colors <- rep("gray", vcount(g_p_health)) # Inicializar com cor cinza para todos os nós
+node_colors[nodes_with_wha] <- "green" # Nós com "WHA" no nome são verdes
+node_colors[nodes_with_unsc] <- "yellow" # Nós com "UNSC" no nome são amarelos
+node_colors[nodes_with_hrc] <- "blue" # Nós com "HRC" no nome são azuis
+node_colors[nodes_with_e] <- "red" # Nós com "E" no nome são vermelhos
+
+# Plotar o grafo com diferentes cores para diferentes padrões nos nomes
+plot(g_p_health, layout = layout_with_fr(g_p_health), vertex.color = node_colors)
+
+
+# Definir o layout usando o algoritmo de Sugiyama
+layout <- layout_with_sugiyama(g_p_health)
+
+# Plotar o grafo com o novo layout
+plot(g_p_health, layout = layout)
+
+# Encontrar o vértice com mais ligações (grau mais alto)
+vertex_with_max_degree <- which.max(degree(g_p_health))
+max_degree <- degree(g_p_health)[vertex_with_max_degree]
+max_degree 
+# Encontrar o vértice mais central
+centralization_value <- centralization.degree(g_p_health)$centralization
+vertex_with_max_centrality <- which.max(centralization_value)
+
+# Obter o nome dos vértices
+vertex_names <- V(g_p_health)$name
+
+# Exibir o resultado
+most_connected_vertex <- vertex_names[vertex_with_max_degree]
+most_central_vertex <- vertex_names[vertex_with_max_centrality]
+
+print(paste("Vértice com mais ligações (grau mais alto):", most_connected_vertex, "com grau:", max_degree))
+print(paste("Vértice mais central:", most_central_vertex))
+
+
+p_health.long <- p_health %>%
+  pivot_longer(cols = c(to:to.24),
+               values_to = "to.novo") %>% 
+  filter(to.novo!="")
+
+View(p_health.long)
+
+p_health.long <- p_health.long %>% select(from, to.novo)
+colnames(p_health.long)[2]<-"to" 
+
+g_p_long <- graph_from_data_frame(p_health.long, directed = T)
+
+# Encontrar o vértice com mais ligações (grau mais alto)
+V(g_p_long)$indegree <- degree(g_p_long, mode = "in")
+V(g_p_long)$outdegree <- degree(g_p_long, mode = "out")
+vertex.max.in.degree <- which.max(V(g_p_long)$indegree)
+vertex_with_max_degree <- which.max(degree(g_p_health))
+V(g_p_long)$name[14]
+max_degree <- degree(g_p_health)[vertex_with_max_degree]
+max_degree 
+# Encontrar o vértice mais central
+centralization_value <- centralization.degree(g_p_health)$centralization
+vertex_with_max_centrality <- which.max(centralization_value)
+
+# Obter o nome dos vértices
+vertex_names <- V(g_p_health)$name
+
+# Exibir o resultado
+most_connected_vertex <- vertex_names[vertex_with_max_degree]
+most_central_vertex <- vertex_names[vertex_with_max_centrality]
+
+
+plot(g_p_long)
