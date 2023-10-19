@@ -1,0 +1,40 @@
+library(igraph)
+voosbr_du
+mat_ne_bin<- read.csv2('s06/mat_ne_binn.csv', row.names = 1)
+
+load("datasets_s7.RData")
+
+degree(lesmis,normalized = F)
+V(lesmis)$grau <- degree(lesmis, normalized=F)
+
+which.max(V(lesmis)$grau)
+V(lesmis)$label
+V(lesmis)$label[12]
+plot(lesmis, vertex=V(lesmis)$grau)
+
+#para redes ponderadas
+
+E(netsci)$value
+V(netsci)$strength <- strength(netsci, loops = F, weights = E (netsci)$value)
+which.max(V(netsci)$grau)
+which.max(V(netsci)$strength)
+netsci
+
+#proximidade(closeness): o quão imediatamente um vértice atinge os demais da rede vs se precisa passar por intermediarios
+
+#semelhante ao grau, porém estende-se a rede toda e leva em conta as distancias.
+
+V(lesmis)$clo <- closeness(lesmis,normalized = F(graph)
+V(powergr)$clo <- closeness(powergr, normalized = F)
+
+#intermediação(betweenness)
+#o vertice que está no meio do caminho entre muitos outros vértices vs é possivel cruzar a rede sem passar por ele
+# semelhante a closeness, mas considera caminhos ao invés de distâncias
+
+V(netsci)$bet <- betweenness(netsci, weights = NA, normalized = F)
+V(netsci)$bet
+plot(netsci, vertex.size=V(netsci)$bet/10000)
+
+# salvando medidas em um dataframe
+
+lemis_medidas <- data.frame(nome=V(lesmis)$label, grau=V(lesmis)$grau, strength=V(lesmis)$strength, closeness=V(lesmis)$
