@@ -1,0 +1,242 @@
+#carregando bibliotecas
+
+install.packages("igraph")
+library('igraph')
+library('tidyverse')
+getwd() 
+
+#importando_edge_list
+
+el_dalson <- read.csv2(file='s06_ego_dalson_el.csv', encoding = "latin1")
+
+g_ego_dalson <- graph_from_data_frame(el_dalson, directed = F)
+
+#importando_a_node_list
+
+nl_dalson <- read.csv2(file='s06_ego_dalson_nl.csv', encoding = "latin1")
+
+# criando um grafo com el + nl
+
+g_ego_dalson <- graph_from_data_frame(el_dalson, directed = F, vertices = nl_dalson)
+
+# plotando o grafo
+
+plot(g_ego_dalson)
+
+# histograma dos pesos das arestas da rede
+
+g_ego_dalson_w <- g_ego_dalson
+
+hist(E(g_ego_dalson_w))$weight <- 1
+
+
+# retendo vértices cujo atributo "área" seja igual a "Ciências Sociais"
+
+data_dalson <- get.data.frame(g_ego_dalson, what = "vertices")
+
+g_ego_dalson_v <- graph_from_data_frame(data_dalson, directed = F, vertices = ar O rea)
+
+g_dalson_cs <- subgraph(g_ego_dalson_v, V(g_ego_dalson_v)[area == "Ciências Sociais"])
+
+plot(g_dalson_cs)
+
+
+g_dalson_cs <- subgraph(g_ego_dalson, V(g_ego_dalson)[area == "Ciências Sociais"])
+
+el_bip <- read_csv2(file = 's06_bipartite_el.csv') #documento -> assunto
+nl_bip <- read_csv2(file = "s06_bipartite_nl.csv") #todos os nós
+
+#criar a rede
+g_bip <- graph_from_data_frame(el_bip, directed= F, vertices = nl_bip)
+
+is.bipartite(g_bip)
+
+plot(g_bip)
+
+#por matrizes
+
+mat_ne_bin <- read.csv2(file = "mat_ne_bin.csv", row.names = 1)
+
+View(mat_ne_bin)
+
+mat_ne_bin <- as.matrix(mat_ne_bin)
+
+rownames(mat_ne_bin)
+colnames(mat_ne_bin)
+
+#rede a partir de uma matriz
+
+g_ne <- graph_from_adjacency_matrix(mat_ne_bin, mode = "directed", weighted = NULL, diag = F)
+
+plot(g_ne)
+
+#criar a partir de uma matriz para redes bipartidarias
+
+mat_aluno_tema <- read.csv2("matriz_aluno_tema.csv", row.names = 1)
+
+mat_aluno_tema <- as.matrix(mat_aluno_tema)
+
+g_aluno_tema <- graph_from_incidence_matrix(mat_aluno_tema, directed = F, weighted = NULL)
+
+plot(g_aluno_tema)
+
+gorder(g_ego_dalson) #ordem - vertices
+gsize(g_aluno_tema) #tamanho - arestas
+
+# redes simples e não simples
+
+plot(g_ego_dalson) #rede não simples pois tem multiplas arestas entre os vértices
+
+el_dalson_simples <- read.csv2('s06_ego_dalson_el_sm.csv', encoding = "latin1")
+
+g_ego_dalson_simples <- graph_from_data_frame(el_dalson_simples, directed = F, vertices = nl_dalson)
+
+plot(g_ego_dalson_simples)
+
+is.simple(g_ego_dalson)
+is.simple(g_ego_dalson_simples)
+
+#agregando arestas dentro do igraph
+
+g_ego_dalson_w <- g_ego_dalson
+
+hist(E(g_ego_dalson_w))$weight <- 1
+
+g_ego_dalson_w
+
+g_ego_dalson_w <- igraph::simplify(g_ego_dalson_w, remove.multiple = T, edge.attr.comb = "sum")
+
+plot(g_ego_dalson_w)
+sort(E(g_ego_dalson_w))$weight
+
+#acessando vertices e arestas
+
+g_ne
+V(g_ne)
+E(g_ne)
+
+dalson_simplesinho<-table(V(g_ego_dalson_simples)$universidade)
+
+g_dalson_cs<-table(V(g_ego_dalson)$cienciassociais)
+view(g_dalson_cs)
+view(dalson_simplesinho)
+
+g_aluno_tema
+
+alunos_m <- c("enio", "diego", "rennan", "erikson")
+
+V(g_aluno_tema)$name[V(g_aluno_tema)$name %in% alunos_m]
+
+E(g_ego_dalson_w)$weight[3:5]
+
+hist(E(g_ego_dalson_w)$weight)
+
+V(g_ne)$name
+V(g_ne)$pop <- c(600, 2600, 817,1000, 890, 1600, 2900, 1100, 868) #criando um noivo atributo de vertice | população
+g_ne
+
+V(g_ne)$met <- ifelse(V(g_ne)$pop>=1000, T, F) #criando um novo atributo de vertice metropole usando uma regra ifelse em cima de população no mesmo grafo
+
+g_ne
+
+table(V(g_ne)$met)
+
+plot(g_ne)
+
+# recuperar nomes dos veetices que sao metropoles
+
+V(g_ne)$name[V(g_ne)$met==T]
+
+plot(g_ne, vertex.size=V(g_ne)$pop/100, vertex.color=V(g_ne)$met) #tamanho e cor para identificar a população e se é metrópole
+
+#exportando um objeto igraph
+  
+nl_ne <- get.data.frame(g_ne, what = "vertices")
+
+write.csv2(nl_ne, "nl_ne.csv")
+
+# vizinhança e adjacência
+
+neighbors(g_ne, "Salvador")
+
+neighbors(g_ne, "Recife", mode = "out")
+
+neighbors(g_aluno_tema, "saude")
+
+neighborhood(g_ne, "Salvador", order=2) #até quantos passos de distância(order)
+
+# subset
+
+g_ne_ind <- induced.subgraph(g_ne, vids = V(g_ne)$met==T)
+
+plot(g_ne_ind)
+load(dataset)
+
+load("datasets_s7.RData")
+V(lesmis)$grau <- degree(lesmis)
+
+#salvar output do eigen centrality como obj
+evc_lesmis <- eigen_centrality(lesmis, directed=F)
+
+# visualizar o escore de cada vértice ('vector')
+
+round(evc_lesmis$vector, 2)
+
+# armazenar valores do vector como um atributo dos nós
+V(lesmis)$evc <- evc_lesmis$vector
+
+# ver qquem tinha maximo score em grau vs eigenvector centrality
+
+which.max(V(lesmis)$grau)
+V(lesmis)$label[12]
+which.max(V(lesmis)$evc)
+V(lesmis)$label[49]
+
+plot(lesmis, vertex.label=ifelse(V(lesmis)$label=="Valjean"|V(lesmis)$label=="Fantine", V(lesmis)$label,""), layout=layout_with_kk)
+
+page.rank(lesmis)
+authority.score(lesmis)
+hub.score(lesmis)
+
+#transitividade
+
+voosbr_du
+V(voosbr_du)$grautotal <- degree(voosbr_du, mode='total')
+V(voosbr_du)$tr_loc<-transitivity(voosbr_du,
+             type = "localundirected",
+             weights = NA,
+             isolates = "NAN")
+
+plot(V(voosbr_du)$grautotal,
+     V(voosbr_du)$tr_loc)
+cor(V(voosbr_du)$grautotal, V(voosbr_du)$tr_loc)
+
+#comparando redes: lesmis x netsci
+
+hist(degree(lesmis))
+hist(degree(netsci))
+
+# distribuição de betweness
+par()
+hist(betweenness(lesmis))
+hist(betweenness(netsci))
+
+## distribyuição da transitividade local
+
+hist(transitivity(lesmis, type = "local"))
+hist(transitivity(netsci, type= "local"))
+
+#centralização de grau
+
+centr_degree(voosbr_du, mode = 'total')
+centr_degree(powergr, mode = 'total')
+
+#centralização de betweness
+centr_betw(voosbr_du)
+centr_betw(powergr)
+
+#assortatividade
+assortativity.degree(lesmis)
+assortativity.degree(netsci)
+assortativity.degree(powergr)
+assortativity.degree(voosbr_du)
