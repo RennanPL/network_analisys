@@ -1,0 +1,54 @@
+#Atividade S12
+
+library(igraph)
+
+load("voosbr_du.RData")
+View("voosbr_du.RData")
+
+## DENSIDADE E CONTAGEM DE ARESTAS DA REDE
+
+edge_density(voosbr_du)
+
+#R1 : a densidade é de 0.04
+
+und_voosbr<-as.undirected(voosbr_du)
+edge_density(und_voosbr)
+
+#R2: na rede direcionada, as arestas tem uma direção específica e isso impões uma limitação a quantidade de arestas possíveis, logo a proporção de arestas existentes com a de arestas possíveis vai ser menor. Já na rede não direcionada, a falta de orientação das arestas implica implica em um aumento no número de arestas possívei
+
+transitivity(voosbr_du, "global")
+
+dyad_census(voosbr_du)
+plot(voosbr_du)
+#R3: a trasitividade baixa indica que a rede de voos tem poucos triangulos fechados e que possui ramos qu não se conectam entre si, ou seja, A tem aresta em comum com B que por sua vez tem aresta em comum com C, no entanto, C não se conecta a A. Portanto, temos uma rede mais aberta. Os dados de dyad corroboram com essa tese, já que temos um número muito maior de pares de vértices que não possuem arestas em comum do que pares que possuem arestas em comum, sejam elas mútuas ou assimétricas.
+
+mean_distance(voosbr_du, weights = NULL)
+
+#R4: a distância média é de 2.35
+
+voos_dist<-distance_table(voosbr_du)$res
+
+plot(voos_dist)
+
+#R5: a plotagem indica que, uma quantidade massiva dos pares de vértices estão a uma distância de 2 ou 3 arestas uns dos outros
+
+diameter(voosbr_du)
+
+#R6: a maior geodésica da rede tem uma distância de 5 arestas.
+
+get_diameter(voosbr_du)
+
+farthest_vertices(voosbr_du)
+
+#R7: o par mais distante é Cruzeiro do Sul e Teresina
+
+shortest.paths(voosbr_du, "São Paulo", "Pelotas")
+all_shortest_paths(voosbr_du, "São Paulo", "Pelotas")
+
+#R8: o caminho mais curto é de duas arestas. Há apenas um caminho mais curto que é São Paulo -> Porto Alegre -> Pelotas
+
+
+shortest.paths(voosbr_du, "Manaus", "Pelotas")
+all_shortest_paths(voosbr_du, "Manaus", "Pelotas")
+
+#R9: o caminho mais curto de Manaus até Pelotas é de 3 vértices e há 4 combinações de caminhos mais curtos possíveis.
