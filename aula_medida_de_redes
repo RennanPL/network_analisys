@@ -38,3 +38,56 @@ plot(netsci, vertex.size=V(netsci)$bet/10000)
 # salvando medidas em um dataframe
 
 lemis_medidas <- data.frame(nome=V(lesmis)$label, grau=V(lesmis)$grau, strength=V(lesmis)$strength, closeness=V(lesmis)$
+
+## onde é mais provável ir parar, saindo aleatoriamente de Recife, dando 4 passos?
+vertices_walk <- list()
+destino_final <- c()
+for(i in 1:100){
+x
+  vertices_walk[[i]] <- random_walk(voosbr_du, "Recife", 4, mode="out")
+  # pegar os nomes dos vertices, 4o elemento (destino final)
+  destino_final[i] <- names(vertices_walk[[i]])[4]
+}
+
+## fazer uma tabela da frequência dos destinos finais, ordenada
+destino_final
+table(destino_final)
+sort(table(destino_final))
+
+
+# netsci
+## qual o diametro da rede de colaborações de cientistas de redes?
+diameter(netsci, weights = NULL)
+get.diameter(netsci, weights = NULL)
+## qual a distância média entre qualquer par de cientistas?
+mean_distance(netsci, weights = NULL)
+## qual o caminho mais curto entre BARABASI, A (vertice 4) e NEWMAN, M (26)
+V(netsci)$label[4]
+V(netsci)$label[26]
+caminho_bn <- shortest_paths(netsci, from=4, to=26)
+caminho_bn$
+  
+  E(netsci, path())
+## plotar o caminho entre vertices
+netsci_path_bar_new <- shortest_paths(netsci, 4, 26) # armazenar vertices do caminho
+netsci_path_bar_new # salvo como lista: vertices em vpath
+netsci_path_bar_new <- unlist(netsci_path_bar_new$vpath) # tirar da lista
+E(netsci, path=netsci_path_bar_new)  # acessar as arestas fornecendo um caminho
+E(netsci)$color_e <- "blue" # todas as arestas azuis
+E(netsci, path=netsci_path_bar_new)$color_e <- "red" # vermelho nas arestas que estão no caminho BARABSI-NEWMAN
+V(netsci)$color_v <- ifelse(V(netsci) %in% netsci_path_bar_new,
+                          "darkred", "darkblue") # vermelho para vertices no caminho
+plot(netsci,
+     vertex.color=V(netsci)$color_v,
+     edge.color=E(netsci)$color_e,
+     vertex.label="",
+     vertex.size=5,
+     layout=layout_with_kk)
+
+# voosne
+## desconectar capitais do nordeste
+min_cut(voosne, source="Fortaleza", target="Maceió", value.only = F)
+
+
+random_walk(voosbr_du, "Recife", 4)
+
