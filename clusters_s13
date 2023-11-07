@@ -1,0 +1,118 @@
+library(igraph)
+set.seed(1234) # agora seed importa!
+load("datasets_s13.RData")
+plot(g_s13)
+
+# redes disponiveis
+## g_s13: exemplo de sala (nao dirigida, binaria, pequena)
+## lesmis: rede de personames les miserables (nao dirigida, ponderada, conexa, peq)
+## lesmis_cut: sem o protagonista Jean Valjean (nao conexa)
+## netsci: colaboracao entre cientistas em analise de rede (nao dirigida, ponderada, conexa, media)
+## voosbr_du: voos nacionais (dirigida, binaria, conexa, peq)
+## voosbr_dw: voos nacionais (ponderada)
+
+
+# aplicando louvain a g_s13
+cluster_louvain(g_s13)
+# salvando o objeto communities
+comunidade_louvain <- cluster_louvain(g_s13)
+comunidade_louvain
+# plotando
+plot(comunidade_louvain, g_s13)
+# recuperando informacoes
+## modularidade
+comunidade_louvain$modularity
+
+## tamanho dos grupos
+modularity(comunidade_louvain)
+## membresia
+comunidade_louvain$membership
+V(g_s13)$name
+### salvando a membresia como atributo dos vertices e plotando
+V(g_s13)$membresia_louvain <- comunidade_louvain$membership
+g_s13
+
+plot(g_s13,vertex.color=V(g_s13)$membresia_louvain)
+# outros algoritmos (ex optimal)
+objeto_optimal<-cluster_optimal(g_s13)
+plot(objeto_optimal, g_s13)
+
+objeto_optimal$modularity
+modularity(objeto_optimal)
+
+objeto_optimal$
+# diferenças louvain x optimal?
+
+# um algoritmo hierarquico: fast and greedy
+comunidade_fg <- cluster_fast_greedy(g_s13)
+comunidade_fg
+## verificando se o output é hierárquico ou achatado
+is_hierarchical(comunidade_fg)
+is_hierarchical(comunidade_louvain)
+## visualizando a hierarquia com plot_dendrogram
+plot_dendrogram(comunidade_fg)
+modularity(comunidade_fg)
+## ajustando com cut_at
+### numero de comunidades
+comunidade_fg_4com <- cut_at(comunidade_fg, no=4)
+plot(comunidade_fg_4com)
+comunidade_fg$membership
+V(g_s13)$name
+### numero de passos
+comunidade_fg_4com_3passos <- cut_at(comunidade_fg, steps = 3)
+comunidade_fg_4com_3passos
+comunidade_fg$membership
+V(g_s13)$name
+## salvando membresia fast geedy como atributo
+### grupos propostos pelo algoritmo
+g_s13
+V(g_s13)$membresia_fg_original <- comunidade_fg$membership
+### grupos com customizacao cut_at
+V(g_s13)$membresia_fg_original <- comunidade_fg_4com_3passos
+g_s13
+# aplicando edge betweenness ao voosbr
+voosbr_dw
+voosbr_du
+cluster_edge_betweenness()
+## ignorando direcao, sem peso
+comunidades_eb_semdir_sempeso <- cluster_edge_betweenness(voosbr_du, weights = NA, directed = F)
+
+comunidades_eb_semdir_sempeso
+sizes(comunidades_eb_semdir_sempeso)
+
+V(voosbr_du)$membresia_eb_sd_sp <- comunidades_eb_semdir_sempeso$membership
+plot(voosbr_du, vertex.color=V(voosbr_du)$membresia_eb_sd_sp)
+## com direcao, sem peso
+comunidades_eb_semdir_sempeso <- cluster_edge_betweenness(voosbr_du, weights = NA, directed = T)
+
+sizes(comunidades_eb_semdir_sempeso)
+
+V(voosbr_du)$membresia_eb_sd_sp <- comunidades_eb_semdir_sempeso$membership
+plot(voosbr_du, vertex.color=V(voosbr_du)$membresia_eb_sd_sp)
+## com direcao e peso (distancia)
+V(voosbr_dw)$membresia_eb_d_p <- comunidades_eb_semdir_sempeso$membership
+
+comunidades_eb_semdir_sempeso <- cluster_edge_betweenness(voosbr_dw, weights = E(voosbr_dw)$minutos, directed = T)
+
+comunidades_eb_semdir_sempeso
+sizes(comunidades_eb_semdir_sempeso)
+
+lay_com_dist <- layout_with_kk(voosbr_dw, weights = E(voosbr_dw)$minutos)
+
+plot(voosbr_dw, vertex.color=V(voosbr_dw)$membresia_eb_d_p, layout=lay_com_dist)
+
+# aplique livremente, recupere metricas
+
+info_lesmis<- cluster_infomap(lesmis)
+sizes(info_lesmis)
+cluster_label_prop()
+cluster_fluid_communities()
+
+# comparando particoes
+## fornecer ao compare() dois objetos communities de uma mesma rede (voosbr)
+## nao dirigido sem peso x dirigido sem peso
+compare(comunidades_eb_semdir_sempeso, comunidades_eb_semdir_sempeso, method = "rand")
+## nao dirigido sem peso x dirigido com peso
+compare(comunidades_eb_semdir_sempeso, comunidades_eb_dir_peso, method = rand)
+## dirigido sem peso x dirigido com peso
+compare(comunidades_eb_dir_sempeso)
