@@ -1,0 +1,150 @@
+# pacotes
+library(tidyverse)
+library(igraph)
+set.seed(1234)
+
+# carregar dados
+load("datasets_s12.RData")
+
+# energiabr_uus_nne: rede de subestacoes de energia do N NE, Undirected, Unweighted, Simple
+# g_amizade: rede de amizades numa escola francesa. Directed, Unweighted, Simple
+
+# cliques
+## ha alguma clique de pelo menos 3 estacoes de energia na minha rede?
+cliques(energiabr_uus_nne, min=3)
+## qual o maior tamanho de clique existente na minha rede?
+clique_num(energiabr_uus_nne)
+## quais sao essas cliques?
+largest_cliques(energiabr_uus_nne)
+## quais tamanhos de clique sao predominantes na minha rede?
+plot(clique_size_counts(energiabr_uus_nne))
+
+
+# componentes
+## para uma rede nao direcionada (energia)
+
+comp_energia <- components(energiabr_uus_nne)
+
+### informacoes armazenadas
+# membresia
+comp_energia$membership
+membership(comp_energia)
+
+# tamanho dos componentes
+comp_energia$csize
+
+# total de componentes
+comp_energia$no
+
+
+## em redes direcionadas (rede de amizades)
+plot(g_amizade)
+
+### quantos componentes fracamente conectados há? quantos fortemente conectados?
+
+comp_amizade_weak<-components(g_amizade, mode= "weak")
+comp_amizade_strong <- components(g_amizade, mode = "strong")
+comp_amizade_strong$no
+comp_amizade_strong$csize
+
+### armazenando para plotar
+g_amizade
+plot(g_amizade, vertex.label="")
+
+V(g_amizade)$membro_comp_fraco <- comp_amizade_weak$membership
+plot(g_amizade, vertex.label="", vertex.color=V(g_amizade)$membro_comp_fraco)
+
+V(g_amizade)$membro_comp_forte <- comp_amizade_strong$membership
+plot(g_amizade, vertex.label="", vertex.color=V(g_amizade)$membro_comp_forte)
+
+# resiliencia e vulnerabilidade
+## conectividade de pares de vertices: quem preciso remover para desconectar um par de estacoes?
+vertex.connectivity(energiabr_uus_nne, "RECIFE_II_PE", "P_AFONSO_III_BA")
+
+min_cut(energiabr_uus_nne, "RECIFE_II_PE", "P_AFONSO_III_BA", value.only = F)
+
+## conectividade no nivel da rede
+### a rede eletrica ja é não conexa (Roraima). Como descartar esse componente menor e estudar apenas o componente gigante?
+is.connected(energiabr_uus_nne)
+#salvar a membresia de cada estação por componente
+comp_energia <- components(energiabr_uus_nne)
+V(energiabr_uus_nne)$membresia <-comp_energia$membership
+#criar subgrafo induzido
+energia_br_comp_gigante <-induced.subgraph(energiabr_uus_nne, vids = V(energiabr_uus_nne)$membresia==1 )
+
+energia_br_comp_gigante
+#id dos vertices: apenas os que sao membros do componente 2
+#criou subgrafo contendo apenas o componente gigante
+
+### considerando apenas o componente gigante, qual o minimo de cortes para que ele ja nao seja conectado?
+min_cut(energia_br_comp_gigante, value.only = F)
+
+## quem sao as estacoes de energia mais criticas?
+sort(degree(energia_br_comp_gigante))
+sort(betweenness(energia_br_comp_gigante))
+sort(closeness(energia_br_comp_gigante))
+
+
+## simulacao da remocao das estacoes (percolacao)
+
+# https://users.dimi.uniud.it/~massimo.franceschet/R/resilience.html
+# percolation removes nodes from a graph and computes 
+# the size of the giant connected component
+# INPUT
+# g: graph to percolate
+# size: number of nodes to remove 
+# d: removal vector
+# OUTPUT
+# giant: a vector with sizes of giant components when nodes are removed
+ 
+percolate <- function(g, size, d) {
+  
+  giant <- vector()
+  
+  # initial size of giant component
+  c <- components(g)
+  giant[1] <- max(c$csize)
+  
+  names(d) <- 1:length(d)
+  d <- sort(d, decreasing=TRUE)
+  vital <- as.integer(names(d[1:size]))
+  
+  for (i in 1:size) {
+    c <- components(delete_vertices(g, vital[1:i]))
+    giant[i+1] <- max(c$csize)
+  }
+  
+  return(giant)
+  
+}
+# supondo que vamos tentar remover ate metade dos nos
+size <- vcount(energiabr_uus_nne)/2
+# random
+rand <- percolate(energiabr_uus_nne, size, d = sample(V(energiabr_uus_nne), size))    
+# degree
+deg <- percolate(energiabr_uus_nne, size, d = degree(energiabr_uus_nne))    
+# closeness
+cln <- percolate(energiabr_uus_nne, size, d=closeness(energiabr_uus_nne))    
+# betweenness
+bet <- percolate(energiabr_uus_nne, size, d = betweenness(energiabr_uus_nne))    
+
+plot(0:size, deg, type = "l", col=1, xlab="Number of removed nodes", ylab="Size of giant component")
+lines(0:size, cln, col=2)
+lines(0:size, bet, col=3)
+lines(0:size, rand, col=4)
+lines(0:size, rep(vcount(energiabr_uus_nne)/2, size+1), lty=2)
+legend(x = "bottomleft", legend = c("deg", "cln", "btw", "rand"), lty = 1, col = 1:4)
+
+# ver qual o nó responsável pelas maiores quedas
+print(
+  data.frame(
+    tamanho_comp_gig = deg,
+    nome_vertice=names(sort(degree(energiabr_uus_nne), decreasing = T))[1:(size+1)]
+  )
+)
+print(
+  data.frame(
+    tamanho_comp_gig = cln,
+    nome_vertice=names(sort(closeness(energiabr_uus_nne), decreasing = T))[1:(size+1)]
+  )
+)
